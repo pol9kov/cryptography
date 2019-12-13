@@ -5,12 +5,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"nornickel/cryptography/aes256"
+	"github.com/pol9kov/cryptography/go/aes256"
 )
 
 // testDecrypt encrypt text with the passphrase
 func testDecrypt(t *testing.T, encrypted string, pass string, expect string) {
-	plaintext := aes256.Decrypt(encrypted, pass)
+	plaintext, err := aes256.Decrypt(encrypted, pass)
+	require.NoError(t, err)
 
 	require.Equal(t, expect, plaintext)
 
@@ -19,7 +20,8 @@ func testDecrypt(t *testing.T, encrypted string, pass string, expect string) {
 
 // testEncryptDecrypt encrypt and then decrypt text with the passphrase
 func testEncryptDecrypt(t *testing.T, plaintext string, pass string) {
-	encrypted := aes256.Encrypt(plaintext, pass)
+	encrypted, err := aes256.Encrypt(plaintext, pass)
+	require.NoError(t, err)
 
 	testDecrypt(t, encrypted, pass, plaintext)
 

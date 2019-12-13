@@ -1,27 +1,29 @@
 package aes256
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"crypto/md5"
+	"crypto/rand"
 	b64 "encoding/base64"
-	"bytes"
 	"io"
+
+	"github.com/pkg/errors"
 )
 
 // Encrypts text with the passphrase
-func Encrypt(plaintext string, pass string) (string) {
+func Encrypt(plaintext string, pass string) (string, error) {
 	salt := make([]byte, 8)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-		panic(err.Error())
+		return "", errors.Wrap(err, "failed to read reader")
 	}
 
 	key, iv := __DeriveKeyAndIv(pass, string(salt))
 
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
-		panic(err)
+		return "", errors.Wrap(err, "failed to create cipher from key")
 	}
 
 	pad := __PKCS7Padding([]byte(plaintext), block.BlockSize())
@@ -29,14 +31,17 @@ func Encrypt(plaintext string, pass string) (string) {
 	encrypted := make([]byte, len(pad))
 	ecb.CryptBlocks(encrypted, pad)
 
-	return b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted)))
+	return b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted))), nil
 }
 
 // Decrypts encrypted text with the passphrase
-func Decrypt(encrypted string, pass string) (string) {
-	ct, _ := b64.StdEncoding.DecodeString(encrypted)
+func Decrypt(encrypted string, pass string) (string, error) {
+	ct, err := b64.StdEncoding.DecodeString(encrypted)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to decode")
+	}
 	if len(ct) < 16 || string(ct[:8]) != "Salted__" {
-		return ""
+		return "", errors.New("incorrect input")
 	}
 
 	salt := ct[8:16]
@@ -45,14 +50,14 @@ func Decrypt(encrypted string, pass string) (string) {
 
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
-		panic(err)
+		return "", errors.Wrap(err, "failed to create cipher from key")
 	}
 
 	cbc := cipher.NewCBCDecrypter(block, []byte(iv))
 	dst := make([]byte, len(ct))
 	cbc.CryptBlocks(dst, ct)
 
-	return string(__PKCS7Trimming(dst))
+	return string(__PKCS7Trimming(dst)), nil
 }
 
 func __PKCS7Padding(cipher []byte, blockSize int) []byte {
