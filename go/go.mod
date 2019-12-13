@@ -1,4 +1,4 @@
-module nornickel/cryptography
+module nornickel/cryptography/go
 
 go 1.13
 
