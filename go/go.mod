@@ -1,4 +1,4 @@
-module github.com/pol9kov/cryptography
+module github.com/pol9kov/cryptography/go
 
 go 1.13
 
