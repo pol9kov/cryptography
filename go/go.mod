@@ -1,4 +1,4 @@
-module nornickel/cryptography/go
+module github.com/pol9kov/cryptography
 
 go 1.13
 
