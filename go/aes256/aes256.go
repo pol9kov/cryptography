@@ -71,6 +71,22 @@ func Encrypt(entity interface{}, pass string) (string, error) {
 	return EncryptText(string(blob), pass)
 }
 
+// Decrypts encrypted text in interface with the passphrase
+func Decrypt(encrypted string, entity interface{}, pass string) error {
+
+	s, err := DecryptText(encrypted, pass)
+	if err != nil {
+		return errors.Wrap(err, "failed to decrypt")
+	}
+
+	err = json.Unmarshal([]byte(s), entity)
+	if err != nil {
+		return errors.Wrap(err, "failed to unmarshal encrypted part")
+	}
+
+	return nil
+}
+
 func __PKCS7Padding(cipher []byte, blockSize int) []byte {
 	padding := blockSize - len(cipher)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
