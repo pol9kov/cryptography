@@ -7,13 +7,14 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	b64 "encoding/base64"
+	"encoding/json"
 	"io"
 
 	"github.com/pkg/errors"
 )
 
 // Encrypts text with the passphrase
-func Encrypt(plaintext string, pass string) (string, error) {
+func EncryptText(plaintext string, pass string) (string, error) {
 	salt := make([]byte, 8)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		return "", errors.Wrap(err, "failed to read reader")
@@ -35,7 +36,7 @@ func Encrypt(plaintext string, pass string) (string, error) {
 }
 
 // Decrypts encrypted text with the passphrase
-func Decrypt(encrypted string, pass string) (string, error) {
+func DecryptText(encrypted string, pass string) (string, error) {
 	ct, err := b64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to decode")
@@ -58,6 +59,16 @@ func Decrypt(encrypted string, pass string) (string, error) {
 	cbc.CryptBlocks(dst, ct)
 
 	return string(__PKCS7Trimming(dst)), nil
+}
+
+// Encrypts interface with the passphrase
+func Encrypt(entity interface{}, pass string) (string, error) {
+	blob, err := json.Marshal(entity)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to marshal entity")
+	}
+
+	return EncryptText(string(blob), pass)
 }
 
 func __PKCS7Padding(cipher []byte, blockSize int) []byte {
