@@ -15,6 +15,9 @@ import (
 
 // Encrypts text with the passphrase
 func EncryptText(plaintext string, pass string) (string, error) {
+	if plaintext == "" {
+		return "", nil
+	}
 	salt := make([]byte, 8)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		return "", errors.Wrap(err, "failed to read reader")
@@ -37,6 +40,9 @@ func EncryptText(plaintext string, pass string) (string, error) {
 
 // Decrypts encrypted text with the passphrase
 func DecryptText(encrypted string, pass string) (string, error) {
+	if encrypted == "" {
+		return "", nil
+	}
 	ct, err := b64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to decode")
