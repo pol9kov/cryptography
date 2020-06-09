@@ -16,12 +16,16 @@ import (
 
 // Encrypts text with the passphrase
 func EncryptText(plaintext string, pass string) (string, error) {
+	fmt.Printf("plaintext %s\n pass %s\n", plaintext, pass)
+
 	salt := make([]byte, 8)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		return "", errors.Wrap(err, "failed to read reader")
 	}
+	fmt.Printf("salt %s\n ", salt)
 
 	key, iv := __DeriveKeyAndIv(pass, string(salt))
+	fmt.Printf("salted key %s\n ", key)
 
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
@@ -33,11 +37,18 @@ func EncryptText(plaintext string, pass string) (string, error) {
 	encrypted := make([]byte, len(pad))
 	ecb.CryptBlocks(encrypted, pad)
 
+	fmt.Printf("encripted %s", encrypted)
+
+	enc := b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted)))
+	fmt.Printf("salted encripted %s", enc)
 	return b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted))), nil
 }
 
 // Decrypts encrypted text with the passphrase
 func DecryptText(encrypted string, pass string) (string, error) {
+
+	fmt.Printf("encrypted blob %s\n pass %s\n", encrypted, pass)
+
 	ct, err := b64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to decode")
@@ -56,7 +67,6 @@ func DecryptText(encrypted string, pass string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create cipher from key")
 	}
-	fmt.Printf("block %v\n", block)
 
 	cbc := cipher.NewCBCDecrypter(block, []byte(iv))
 	dst := make([]byte, len(ct))
