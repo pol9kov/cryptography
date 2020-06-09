@@ -8,7 +8,6 @@ import (
 	"crypto/rand"
 	b64 "encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 
 	"github.com/pkg/errors"
@@ -16,16 +15,13 @@ import (
 
 // Encrypts text with the passphrase
 func EncryptText(plaintext string, pass string) (string, error) {
-	fmt.Printf("plaintext %s\n pass %s\n", plaintext, pass)
 
 	salt := make([]byte, 8)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		return "", errors.Wrap(err, "failed to read reader")
 	}
-	fmt.Printf("salt %s\n ", salt)
 
 	key, iv := __DeriveKeyAndIv(pass, string(salt))
-	fmt.Printf("salted key %s\n ", key)
 
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
@@ -37,17 +33,11 @@ func EncryptText(plaintext string, pass string) (string, error) {
 	encrypted := make([]byte, len(pad))
 	ecb.CryptBlocks(encrypted, pad)
 
-	fmt.Printf("encripted %s\n", encrypted)
-
-	enc := b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted)))
-	fmt.Printf("salted encripted %s\n", enc)
 	return b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted))), nil
 }
 
 // Decrypts encrypted text with the passphrase
 func DecryptText(encrypted string, pass string) (string, error) {
-
-	fmt.Printf("encrypted blob %s\n pass %s\n", encrypted, pass)
 
 	ct, err := b64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
@@ -56,12 +46,10 @@ func DecryptText(encrypted string, pass string) (string, error) {
 	if len(ct) < 16 || string(ct[:8]) != "Salted__" {
 		return "", errors.New("incorrect input")
 	}
-	fmt.Printf("ct %s\n", ct)
 
 	salt := ct[8:16]
 	ct = ct[16:]
 	key, iv := __DeriveKeyAndIv(pass, string(salt))
-	fmt.Printf("key %s\n", key)
 
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
@@ -71,9 +59,8 @@ func DecryptText(encrypted string, pass string) (string, error) {
 	cbc := cipher.NewCBCDecrypter(block, []byte(iv))
 	dst := make([]byte, len(ct))
 	cbc.CryptBlocks(dst, ct)
-	fmt.Printf("dst %s\n", dst)
 
-	return string(__PKCS7Trimming(dst)), nil
+	return __PKCS7Trimming(dst)
 }
 
 // Encrypts interface with the passphrase
@@ -108,10 +95,12 @@ func __PKCS7Padding(cipher []byte, blockSize int) []byte {
 	return append(cipher, padtext...)
 }
 
-func __PKCS7Trimming(encrypt []byte) []byte {
+func __PKCS7Trimming(encrypt []byte) (string, error) {
 	padding := encrypt[len(encrypt)-1]
-	fmt.Printf("padding %v\n", len(encrypt)-int(padding))
-	return encrypt[:len(encrypt)-int(padding)]
+	if len(encrypt)-int(padding) < 0 {
+		return "", errors.New("failed to trim")
+	}
+	return string(encrypt[:len(encrypt)-int(padding)]), nil
 }
 
 func __DeriveKeyAndIv(pass string, salt string) (string, string) {
