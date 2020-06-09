@@ -37,10 +37,10 @@ func EncryptText(plaintext string, pass string) (string, error) {
 	encrypted := make([]byte, len(pad))
 	ecb.CryptBlocks(encrypted, pad)
 
-	fmt.Printf("encripted %s", encrypted)
+	fmt.Printf("encripted %s\n", encrypted)
 
 	enc := b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted)))
-	fmt.Printf("salted encripted %s", enc)
+	fmt.Printf("salted encripted %s\n", enc)
 	return b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted))), nil
 }
 
