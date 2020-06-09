@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	b64 "encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/pkg/errors"
@@ -15,9 +16,6 @@ import (
 
 // Encrypts text with the passphrase
 func EncryptText(plaintext string, pass string) (string, error) {
-	if plaintext == "" {
-		return "", nil
-	}
 	salt := make([]byte, 8)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 		return "", errors.Wrap(err, "failed to read reader")
@@ -40,9 +38,6 @@ func EncryptText(plaintext string, pass string) (string, error) {
 
 // Decrypts encrypted text with the passphrase
 func DecryptText(encrypted string, pass string) (string, error) {
-	if encrypted == "" {
-		return "", nil
-	}
 	ct, err := b64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to decode")
@@ -50,19 +45,23 @@ func DecryptText(encrypted string, pass string) (string, error) {
 	if len(ct) < 16 || string(ct[:8]) != "Salted__" {
 		return "", errors.New("incorrect input")
 	}
+	fmt.Printf("ct %s\n", ct)
 
 	salt := ct[8:16]
 	ct = ct[16:]
 	key, iv := __DeriveKeyAndIv(pass, string(salt))
+	fmt.Printf("key %s\n", key)
 
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		return "", errors.Wrap(err, "failed to create cipher from key")
 	}
+	fmt.Printf("block %v\n", block)
 
 	cbc := cipher.NewCBCDecrypter(block, []byte(iv))
 	dst := make([]byte, len(ct))
 	cbc.CryptBlocks(dst, ct)
+	fmt.Printf("dst %s\n", dst)
 
 	return string(__PKCS7Trimming(dst)), nil
 }
@@ -101,6 +100,7 @@ func __PKCS7Padding(cipher []byte, blockSize int) []byte {
 
 func __PKCS7Trimming(encrypt []byte) []byte {
 	padding := encrypt[len(encrypt)-1]
+	fmt.Printf("padding %v\n", len(encrypt)-int(padding))
 	return encrypt[:len(encrypt)-int(padding)]
 }
 
