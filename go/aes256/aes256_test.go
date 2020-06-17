@@ -10,7 +10,7 @@ import (
 
 // testDecrypt encrypt text with the passphrase
 func testDecrypt(t *testing.T, encrypted string, pass string, expect string) {
-	plaintext, err := aes256.DecryptText(encrypted, pass)
+	plaintext, err := aes256.DecryptText(encrypted, []byte(pass))
 	require.NoError(t, err)
 
 	require.Equal(t, expect, plaintext)
@@ -20,7 +20,7 @@ func testDecrypt(t *testing.T, encrypted string, pass string, expect string) {
 
 // testEncryptDecrypt encrypt and then decrypt text with the passphrase
 func testEncryptDecrypt(t *testing.T, plaintext string, pass string) {
-	encrypted, err := aes256.EncryptText(plaintext, pass)
+	encrypted, err := aes256.EncryptText(plaintext, []byte(pass))
 	require.NoError(t, err)
 
 	testDecrypt(t, encrypted, pass, plaintext)
