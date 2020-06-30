@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Encrypts text with the passphrase
+// Encrypts text with the string passphrase
 func EncryptTextWithStringPass(plaintext string, pass string) (string, error) {
 	return EncryptText(plaintext, []byte(pass))
 }
@@ -39,6 +39,11 @@ func EncryptText(plaintext string, pass []byte) (string, error) {
 	ecb.CryptBlocks(encrypted, pad)
 
 	return b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted))), nil
+}
+
+// Decrypts encrypted text with the string passphrase
+func DecryptTextWithStringPass(plaintext string, pass string) (string, error) {
+	return DecryptText(plaintext, []byte(pass))
 }
 
 // Decrypts encrypted text with the passphrase
