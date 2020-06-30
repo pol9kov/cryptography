@@ -14,6 +14,11 @@ import (
 )
 
 // Encrypts text with the passphrase
+func EncryptTextWithStringPass(plaintext string, pass string) (string, error) {
+	return EncryptText(plaintext, []byte(pass))
+}
+
+// Encrypts text with the passphrase
 func EncryptText(plaintext string, pass []byte) (string, error) {
 
 	salt := make([]byte, 8)
