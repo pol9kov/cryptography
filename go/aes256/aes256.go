@@ -14,7 +14,7 @@ import (
 )
 
 // Encrypts text with the passphrase
-func EncryptText(plaintext string, pass []byte) (string, error) {
+func EncryptText(plaintext string, pass string) (string, error) {
 
 	salt := make([]byte, 8)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
@@ -37,7 +37,7 @@ func EncryptText(plaintext string, pass []byte) (string, error) {
 }
 
 // Decrypts encrypted text with the passphrase
-func DecryptText(encrypted string, pass []byte) (string, error) {
+func DecryptText(encrypted string, pass string) (string, error) {
 
 	ct, err := b64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
@@ -64,7 +64,7 @@ func DecryptText(encrypted string, pass []byte) (string, error) {
 }
 
 // Encrypts interface with the passphrase
-func Encrypt(entity interface{}, pass []byte) (string, error) {
+func Encrypt(entity interface{}, pass string) (string, error) {
 	blob, err := json.Marshal(entity)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to marshal entity")
@@ -74,7 +74,7 @@ func Encrypt(entity interface{}, pass []byte) (string, error) {
 }
 
 // Decrypts encrypted text in interface with the passphrase
-func Decrypt(encrypted string, entity interface{}, pass []byte) error {
+func Decrypt(encrypted string, entity interface{}, pass string) error {
 
 	s, err := DecryptText(encrypted, pass)
 	if err != nil {
