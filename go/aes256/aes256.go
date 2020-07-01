@@ -13,6 +13,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Encrypts blob with the blob passphrase
+func EncryptBLOB(plaintext []byte, pass []byte) (string, error) {
+	return EncryptText(string(plaintext), string(pass))
+}
+
 // Encrypts text with the passphrase
 func EncryptText(plaintext string, pass string) (string, error) {
 
@@ -36,6 +41,11 @@ func EncryptText(plaintext string, pass string) (string, error) {
 	return b64.StdEncoding.EncodeToString([]byte("Salted__" + string(salt) + string(encrypted))), nil
 }
 
+// Decrypts encrypted blob with the blob passphrase
+func DecryptBLOB(encrypted []byte, pass []byte) (string, error) {
+	return DecryptText(string(encrypted), string(pass))
+}
+
 // Decrypts encrypted text with the passphrase
 func DecryptText(encrypted string, pass string) (string, error) {
 
@@ -49,7 +59,7 @@ func DecryptText(encrypted string, pass string) (string, error) {
 
 	salt := ct[8:16]
 	ct = ct[16:]
-	key, iv := __DeriveKeyAndIv(string(pass), string(salt))
+	key, iv := __DeriveKeyAndIv(pass, string(salt))
 
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
